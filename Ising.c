@@ -1,6 +1,7 @@
 //Ising Model
 /*Dónal McGrath ID:7012616
-Prajit Baruah*/
+Prajit Baruah ID: 9097760
+*/
 
 #include <stdio.h>
 #include <time.h>
@@ -19,14 +20,23 @@ Prajit Baruah*/
 double s[N][N]={0};
 int n_particles = 0;
 double acc = 0.5;
-int mc_steps = 100000;
+int mc_steps = 50000;
+int measure = 1000; //How often we'll measure shit
 int rand_i, rand_j;
 double num;
 double total=0;
 int a, b;
 double init_e = 0; 
 double J = 1; //Ask if this needs to be changed. 
-double T = 1; 
+int T = 0.1; 
+double mag = 0; 
+double ct = 0.1; // temperature change delta 
+double avg_energy = 0.0; 
+double energy = 0; 
+double avg_mag = 0; 
+double e2 = 0; //energy square for specific heat 
+double heat = 0; 
+double beta = 0; 
 
 /*
 If initial code works, try and implement some of the improvements mentioned in the book. 
@@ -69,8 +79,8 @@ int IsingPos(void){
 
 int interact(int i, int j){
     double de = 0; 
-    double energy = init_e; 
-    double beta = 1/T; 
+    energy = init_e; 
+    beta = 1/T; 
     //printf("pos: %d %d old spin: %lf\n", i, j, s[i][j]);
     for(int n = i-1; n <= i+1;n++){
         for(int m = j-1; m <= j+1;m++){
@@ -97,19 +107,15 @@ int interact(int i, int j){
 }
 
 void write_data(double step){
-    char buffer[128];
-    sprintf(buffer, "Ising/State_step%07lf.dat", step);
-    FILE* fp = fopen(buffer, "w");
-    int d, n;
-    fprintf(fp, "%d\n", n_particles);
-    for(n = 0; n < n_particles; ++n){
-        for(d = 0; d < N; ++d) fprintf(fp, "%d %d", n, d);
-        fprintf(fp, "%lf\n", s[n][d]);
-    }
+
+    FILE* fp = fopen("Isingdata.dat", "w");
+    fprintf(fp,"%d\t%lf\t%lf\t%lf\n", T,avg_mag, avg_energy, heat);
     fclose(fp);
 }
 
 int main(int argc, char* argv[]){
+    int div = (mc_steps-10000)/measure; 
+    printf("%d\n", div);
     dsfmt_seed(time(NULL));
     struct stat st = {0};
 
@@ -118,20 +124,31 @@ int main(int argc, char* argv[]){
         //printf("created folder\"data_Ising\"\n");
     }  
     IsingPos();
+
+    while(T <= 5){
+
     for(int steps = 0; steps< mc_steps; steps++){
         rand_i = (int) (N*dsfmt_genrand());
         rand_j = (int) (N*dsfmt_genrand());
+
         //printf("pos: %d %d old spin: %lf\n", rand_i, rand_j, s[rand_i][rand_j]);
         interact(rand_i, rand_j);
-    }
-    for(int i =0; i<N; i++){
-        for(int j=0; j<N; j++){
-            //printf("%d %d %lf\n", i, j, s[i][j]);
-            total += s[i][j]; 
+
+        if(steps >= 10000 && steps % measure == 0){ //Confirm if system is actually in equillibrium
+
+            avg_energy += energy;
+            e2 += energy*energy;
+            for(int i = 0; i<N; i++){
+                for (int j = 0; j<N; j++){
+                    avg_mag += s[i][j];
+                }
+            }
         }
     }
-    printf("total mag: %lf\n", total/(N*N));
-
-
-
+    avg_energy /= div; 
+    avg_mag /= div;
+    e2 /= div;
+    heat = beta*beta*(e2 - (avg_energy*avg_energy))/(N*N);
+    T += ct;
+    }
 }
