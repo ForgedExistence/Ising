@@ -20,7 +20,7 @@ Prajit Baruah ID: 9097760
 double s[N][N]={0};
 int n_particles = 0;
 double acc = 0.5;
-int mc_steps = 50000;
+int mc_steps = 8000000;
 int measure = 1000; //How often we'll measure shit
 int rand_i, rand_j;
 double num;
@@ -28,7 +28,7 @@ double total=0;
 int a, b;
 double init_e = 0; 
 double J = 1; //Ask if this needs to be changed. 
-int T = 0.1; 
+double T = 0.5; 
 double mag = 0; 
 double ct = 0.1; // temperature change delta 
 double avg_energy = 0.0; 
@@ -40,10 +40,17 @@ double beta = 0;
 
 /*
 If initial code works, try and implement some of the improvements mentioned in the book. 
+
+
+Equillibrium takes a minimum of 10^6 steps for T > critical temp, but close to 0, it can take upto 10^9
+
+Initially I considered a loop over Temperature such that after x steps we'd be assured of equillibrium in any initial system, 
+but this doesn't seem possible since their is a massive difference in how long they take, so I think we'll have to run the sim 
+by hand at each point for different number of steps  
 */
 
 
-int IsingPos(void){
+void IsingPos(void){
     char buffer[128];
     sprintf(buffer, "State_step_Init.dat");
     //FILE* fp = fopen(buffer, "w");
@@ -79,7 +86,6 @@ int IsingPos(void){
 
 int interact(int i, int j){
     double de = 0; 
-    energy = init_e; 
     beta = 1/T; 
     //printf("pos: %d %d old spin: %lf\n", i, j, s[i][j]);
     for(int n = i-1; n <= i+1;n++){
@@ -109,7 +115,7 @@ int interact(int i, int j){
 void write_data(double step){
 
     FILE* fp = fopen("Isingdata.dat", "w");
-    fprintf(fp,"%d\t%lf\t%lf\t%lf\n", T,avg_mag, avg_energy, heat);
+    fprintf(fp,"%lf\t%lf\t%lf\t%lf\n", T,avg_mag, avg_energy, heat);
     fclose(fp);
 }
 
@@ -124,8 +130,10 @@ int main(int argc, char* argv[]){
         //printf("created folder\"data_Ising\"\n");
     }  
     IsingPos();
+    energy = init_e; 
 
-    while(T <= 5){
+    //while(T <= 5){"
+    FILE* pf = fopen("equi_test.dat", "w");
 
     for(int steps = 0; steps< mc_steps; steps++){
         rand_i = (int) (N*dsfmt_genrand());
@@ -133,7 +141,21 @@ int main(int argc, char* argv[]){
 
         //printf("pos: %d %d old spin: %lf\n", rand_i, rand_j, s[rand_i][rand_j]);
         interact(rand_i, rand_j);
+        if(mc_steps % 1000 == 0){
+            
+            for(int i = 0; i<N; i++){
+                for (int j = 0; j<N; j++){
+                    total += s[i][j]/(N*N);
+                }
+            }
+            
+            fprintf(pf, "%d\t%lf\n", steps, total);
+            total = 0; 
+        }
 
+    } //Remove when you remove comments. 
+
+/*
         if(steps >= 10000 && steps % measure == 0){ //Confirm if system is actually in equillibrium
 
             avg_energy += energy;
@@ -145,10 +167,13 @@ int main(int argc, char* argv[]){
             }
         }
     }
+
     avg_energy /= div; 
     avg_mag /= div;
     e2 /= div;
     heat = beta*beta*(e2 - (avg_energy*avg_energy))/(N*N);
-    T += ct;
-    }
+    T += ct;*/
+   // }
+   printf("Simulaton Done");
+   fclose(pf);
 }
