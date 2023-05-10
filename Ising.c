@@ -19,24 +19,24 @@ Prajit Baruah ID: 9097760
 
 double s[N][N]={0};
 int n_particles = 0;
-double acc = 0.5;
-int mc_steps = 8000000;
-int measure = 1000; //How often we'll measure shit
+int mc_steps = 60000000;
+double eq_steps = 30000000;
+int measure = 100000; //How often we'll measure shit
 int rand_i, rand_j;
 double num;
 double total=0;
 int a, b;
 double init_e = 0; 
 double J = 1; //Ask if this needs to be changed. 
-double T = 0.5; 
+double T = 5; 
 double mag = 0; 
-double ct = 0.1; // temperature change delta 
 double avg_energy = 0.0; 
 double energy = 0; 
 double avg_mag = 0; 
 double e2 = 0; //energy square for specific heat 
 double heat = 0; 
 double beta = 0; 
+int steps; 
 
 /*
 If initial code works, try and implement some of the improvements mentioned in the book. 
@@ -112,57 +112,54 @@ int interact(int i, int j){
     else{return 0;}
 }
 
-void write_data(double step){
+void write_data(void){
 
-    FILE* fp = fopen("Isingdata.dat", "w");
+    FILE* fp = fopen("Isingdata.dat", "a");
     fprintf(fp,"%lf\t%lf\t%lf\t%lf\n", T,avg_mag, avg_energy, heat);
     fclose(fp);
 }
 
 int main(int argc, char* argv[]){
-    int div = (mc_steps-10000)/measure; 
-    printf("%d\n", div);
-    dsfmt_seed(time(NULL));
+
+    int div = (mc_steps-eq_steps)/measure; 
     struct stat st = {0};
 
     if(stat("data_Ising", &st)==-1){
        // mkdir("data_Ising");
         //printf("created folder\"data_Ising\"\n");
     }  
+
+    dsfmt_seed(time(NULL));
+
     IsingPos();
     energy = init_e; 
 
-    //while(T <= 5){"
-    FILE* pf = fopen("equi_test.dat", "w");
+    FILE* pf = fopen("equi_test.dat", "w"); //This file is just to check for equillibrium
 
-    for(int steps = 0; steps< mc_steps; steps++){
+    for(steps = 0; steps< mc_steps; steps++){
+        total = 0;
         rand_i = (int) (N*dsfmt_genrand());
         rand_j = (int) (N*dsfmt_genrand());
 
-        //printf("pos: %d %d old spin: %lf\n", rand_i, rand_j, s[rand_i][rand_j]);
         interact(rand_i, rand_j);
-        if(mc_steps % 1000 == 0){
-            
+
+        if(steps % measure == 0){
+
             for(int i = 0; i<N; i++){
                 for (int j = 0; j<N; j++){
                     total += s[i][j]/(N*N);
                 }
             }
-            
-            fprintf(pf, "%d\t%lf\n", steps, total);
-            total = 0; 
+            fprintf(pf, "%d\t%lf\n", steps, total); 
         }
 
-    } //Remove when you remove comments. 
-
-/*
-        if(steps >= 10000 && steps % measure == 0){ //Confirm if system is actually in equillibrium
+    if(steps >= eq_steps && steps % measure == 0){ //Confirm if system is actually in equillibrium
 
             avg_energy += energy;
             e2 += energy*energy;
             for(int i = 0; i<N; i++){
                 for (int j = 0; j<N; j++){
-                    avg_mag += s[i][j];
+                    avg_mag += s[i][j]/(N*N);
                 }
             }
         }
@@ -171,9 +168,11 @@ int main(int argc, char* argv[]){
     avg_energy /= div; 
     avg_mag /= div;
     e2 /= div;
-    heat = beta*beta*(e2 - (avg_energy*avg_energy))/(N*N);
-    T += ct;*/
-   // }
-   printf("Simulaton Done");
-   fclose(pf);
+    heat = beta*beta*(e2 - (avg_energy*avg_energy))/(N*N); 
+    write_data();    
+
+    printf("Simulaton Done\n");
+    fclose(pf);
+    return 0;
+
 }
