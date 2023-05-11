@@ -41,18 +41,18 @@ plt.show()
 
 
 
-y = np.log(auto_cor_normalized)
+# y = np.log(auto_cor_normalized)
 
-y[np.isnan(y)] = np.nanmean(y)
-y[np.isinf(y)] = np.nanmedian(y)
+# y[np.isnan(y)] = np.nanmean(y)
+# y[np.isinf(y)] = np.nanmedian(y)
 
-popt, pcov = curve_fit(exp_decay, time, y)
+# popt, pcov = curve_fit(exp_decay, time, y)
 
-a_opt = popt[0]
-b_opt = popt[1]
+# a_opt = popt[0]
+# b_opt = popt[1]
 
-x = (-np.log(0.5) / b_opt)
-in_x = (1/x)*tmax
+# x = (-np.log(0.5) / b_opt)
+# in_x = (1/x)*tmax
 
-print(in_x)
+# print(in_x)
 
