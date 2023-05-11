@@ -28,7 +28,7 @@ double total=0;
 int a, b;
 double init_e = 0; 
 double J = 1; //Ask if this needs to be changed. 
-double T = 5.2; 
+double T = 4.0; 
 double mag = 0; 
 double avg_energy = 0.0; 
 double energy = 0; 
@@ -40,19 +40,6 @@ double ct = 0.1; //delta for temperature change
 int steps; 
 double am1 = 0;
 double am2 = 0; 
-
-
-/*
-If initial code works, try and implement some of the improvements mentioned in the book. 
-
-
-Equillibrium takes a minimum of 10^6 steps for T > critical temp, but close to 0, it can take upto 10^9
-
-Initially I considered a loop over Temperature such that after x steps we'd be assured of equillibrium in any initial system, 
-but this doesn't seem possible since their is a massive difference in how long they take, so I think we'll have to run the sim 
-by hand at each point for different number of steps  
-*/
-
 
 void IsingPos(void){
     //char buffer[128];
@@ -146,7 +133,7 @@ int main(int argc, char* argv[]){
     IsingPos();
     energy = init_e; 
 
-    //FILE* pf = fopen("equi_test.dat", "w"); //This file is just to check for equillibrium
+    FILE* pf = fopen("equi_test.dat", "w"); //This file is just to check for equillibrium
 
     while(T <= 10){
 
@@ -157,7 +144,7 @@ int main(int argc, char* argv[]){
         rand_j = (int) (N*dsfmt_genrand());
 
         interact(rand_i, rand_j);
-/*
+
         if(steps % measure == 0){
 
             for(int i = 0; i<N; i++){
@@ -165,8 +152,8 @@ int main(int argc, char* argv[]){
                     total += s[i][j]/(N*N);
                 }
             }
-            //fprintf(pf, "%d\t%lf\n", steps, total); 
-        }*/
+            fprintf(pf, "%d\t%lf\n", steps, total); 
+        }
 
     if(steps >= eq_steps && steps % measure == 0){ //Confirm if system is actually in equillibrium
 
@@ -187,14 +174,14 @@ int main(int argc, char* argv[]){
     avg_mag /= div;
     e2 /= div;
     heat = beta*beta*(e2 - (avg_energy*avg_energy))/(N*N); 
-    //write_data();   
+    write_data();   
     printf("Simulation done at Temperature of %lf\n", T);
     T += ct;
 
     } 
 
     printf("Simulaton Done\n");
-   // fclose(pf);
+    fclose(pf);
 
     return 0;
 
