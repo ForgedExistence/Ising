@@ -7,7 +7,7 @@ particle = 100*100
 tmax = 99900000-50000000
 step = 100000
 cor_time = []
-for m in np.arange(0.1, 5.5, 0.1):
+for m in np.arange(0.1, 10, 0.1):
     data = np.loadtxt("Results/equi_T={:.1f}.dat".format(m))
 #data = np.loadtxt('Results/equi_T=.dat')
     av_mag = data[:, 1]
@@ -28,11 +28,11 @@ for m in np.arange(0.1, 5.5, 0.1):
     for i in range(0, int(tmax/step), 1):
         auto_cor.append(auto_correlation_function(i))
     #print(auto_cor)
-    auto_cor[np.isnan(auto_cor)] = 0.0
-    print(m)
-    auto_cor_norm = np.log(np.array(auto_cor)/auto_cor[0])
-    #print(auto_cor_norm)
 
+    auto_cor_norm = np.log(np.array(auto_cor)/auto_cor[0])
+    auto_cor_norm[np.isnan(auto_cor_norm)] = 0
+    print(auto_cor_norm)
+    print(m)
     def straight_line(x, a, b):
         return a*x+b
 
@@ -41,7 +41,7 @@ for m in np.arange(0.1, 5.5, 0.1):
     popt, pcov = curve_fit(straight_line, time, auto_cor_norm)
     cor_time.append(popt[0])
 
-temp = np.arange(0.1, 5.2, 0.1)
+temp = np.arange(0.1, 10, 0.1)
 
 print(cor_time)
 plt.figure()
