@@ -123,10 +123,10 @@ void write_data(void){
     fclose(fp);
 }
 
-void w2(int step){
+void w2(int T){
     char buffer[128];
-    sprintf(buffer, "Results/equi_step%0d.dat", step);
-    FILE* fp = fopen(buffer, "w");
+    sprintf(buffer, "Results/equi_T=%0d.dat", T);
+    FILE* fp = fopen(buffer, "a");
     fprintf(fp, "%d\t%lf\n", steps, avg_mag); 
     fclose(fp);
 }
@@ -172,18 +172,19 @@ int main(int argc, char* argv[]){
 
             avg_energy += energy;
             e2 += energy*energy;
+            
             for(int i = 0; i<N; i++){
                 for (int j = 0; j<N; j++){
                     avg_mag += s[i][j]/(N*N);
                 }
-            }
-        }
+            } 
 
-        w2(steps);
+            w2(T);
+        }
     }
 
-    //avg_energy /= div; 
-    //avg_mag /= div;
+    avg_energy /= div; 
+    avg_mag /= div;
     e2 /= div;
     heat = beta*beta*(e2 - (avg_energy*avg_energy))/(N*N); 
     //write_data();   
