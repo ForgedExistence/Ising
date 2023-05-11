@@ -19,8 +19,8 @@ Prajit Baruah ID: 9097760
 
 double s[N][N]={0};
 int n_particles = 0;
-int mc_steps = 60000000;
-double eq_steps = 30000000;
+int mc_steps = 90000000;
+double eq_steps = 40000000;
 int measure = 100000; //How often we'll measure shit
 int rand_i, rand_j;
 double num;
@@ -28,15 +28,19 @@ double total=0;
 int a, b;
 double init_e = 0; 
 double J = 1; //Ask if this needs to be changed. 
-double T = 5; 
+double T = 5.2; 
 double mag = 0; 
 double avg_energy = 0.0; 
 double energy = 0; 
 double avg_mag = 0; 
 double e2 = 0; //energy square for specific heat 
 double heat = 0; 
-double beta = 0; 
+double beta = 0;  
+double ct = 0.1; //delta for temperature change
 int steps; 
+double am1 = 0;
+double am2 = 0; 
+
 
 /*
 If initial code works, try and implement some of the improvements mentioned in the book. 
@@ -51,8 +55,8 @@ by hand at each point for different number of steps
 
 
 void IsingPos(void){
-    char buffer[128];
-    sprintf(buffer, "State_step_Init.dat");
+    //char buffer[128];
+    //sprintf(buffer, "State_step_Init.dat");
     //FILE* fp = fopen(buffer, "w");
     
     for(int i = 0; i < N; i++){
@@ -119,6 +123,14 @@ void write_data(void){
     fclose(fp);
 }
 
+void w2(int step){
+    char buffer[128];
+    sprintf(buffer, "Results/equi_step%0d.dat", step);
+    FILE* fp = fopen(buffer, "w");
+    fprintf(fp, "%d\t%lf\n", steps, avg_mag); 
+    fclose(fp);
+}
+
 int main(int argc, char* argv[]){
 
     int div = (mc_steps-eq_steps)/measure; 
@@ -134,15 +146,18 @@ int main(int argc, char* argv[]){
     IsingPos();
     energy = init_e; 
 
-    FILE* pf = fopen("equi_test.dat", "w"); //This file is just to check for equillibrium
+    //FILE* pf = fopen("equi_test.dat", "w"); //This file is just to check for equillibrium
+
+    while(T <= 10){
 
     for(steps = 0; steps< mc_steps; steps++){
         total = 0;
+        avg_mag = 0;
         rand_i = (int) (N*dsfmt_genrand());
         rand_j = (int) (N*dsfmt_genrand());
 
         interact(rand_i, rand_j);
-
+/*
         if(steps % measure == 0){
 
             for(int i = 0; i<N; i++){
@@ -150,8 +165,8 @@ int main(int argc, char* argv[]){
                     total += s[i][j]/(N*N);
                 }
             }
-            fprintf(pf, "%d\t%lf\n", steps, total); 
-        }
+            //fprintf(pf, "%d\t%lf\n", steps, total); 
+        }*/
 
     if(steps >= eq_steps && steps % measure == 0){ //Confirm if system is actually in equillibrium
 
@@ -163,16 +178,23 @@ int main(int argc, char* argv[]){
                 }
             }
         }
+
+        w2(steps);
     }
 
-    avg_energy /= div; 
-    avg_mag /= div;
+    //avg_energy /= div; 
+    //avg_mag /= div;
     e2 /= div;
     heat = beta*beta*(e2 - (avg_energy*avg_energy))/(N*N); 
-    write_data();    
+    //write_data();   
+    printf("Simulation done at Temperature of %lf\n", T);
+    T += ct;
+
+    } 
 
     printf("Simulaton Done\n");
-    fclose(pf);
+   // fclose(pf);
+
     return 0;
 
 }
