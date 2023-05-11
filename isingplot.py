@@ -4,8 +4,8 @@ from scipy.optimize import curve_fit
 
 
 particle = 100*100
-for x in range(0, 10, 0.1):
-    data_meas = np.loadtxt("equi_test{:.1f}.dat".format(x), "r")
+for m in range(0, 10, 0.1):
+    data_meas = np.loadtxt("equi_test{:.1f}.dat".format(m), "r")
     average_mag = data_meas[:, 1]
     print(average_mag[1])
     tmax = 59900000
@@ -29,8 +29,8 @@ for x in range(0, 10, 0.1):
         auto_cor.append(auto_correlation_function(i))
     auto_cor_normalized = np.array(auto_cor)/auto_cor[0]
 
-    def exp_decay(x, a, b):
-        return a * np.exp(-b * x)
+    def straight_line(x, a, b):
+        return a*x+b
 
     plt.figure()
     plt.title("auto-cor")
@@ -42,7 +42,7 @@ for x in range(0, 10, 0.1):
     y[np.isnan(y)] = np.nanmean(y)
     y[np.isinf(y)] = np.nanmedian(y)
 
-    popt, pcov = curve_fit(exp_decay, time, y)
+    popt, pcov = curve_fit(straight_line, time, y)
 
     a_opt = popt[0]
     b_opt = popt[1]
